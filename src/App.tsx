@@ -324,13 +324,12 @@ export default function App() {
             <span className="pt-[5px] text-[9px] text-[#a0a1b0]">All times in units</span>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[650px] border-collapse text-left">
+            <table className="w-full min-w-[600px] border-collapse text-left">
               <thead>
                 <tr className="border-y border-[#f0f0f5] bg-[#fbfbfd] text-[8px] font-bold uppercase tracking-[0.55px] text-[#9697a8]">
                   <th className="px-3 py-2.5">Process</th>
                   <th className="px-3 py-2.5">Arrival</th>
                   <th className="px-3 py-2.5">Burst</th>
-                  <th className="px-3 py-2.5">Starts</th>
                   <th className="px-3 py-2.5">Completes</th>
                   <th className="px-3 py-2.5">Turnaround</th>
                   <th className="px-3 py-2.5">Waiting</th>
@@ -349,7 +348,6 @@ export default function App() {
                       </td>
                       <td className="px-3 py-2">{process.arrivalTime}</td>
                       <td className="px-3 py-2">{process.burstTime}</td>
-                      <td className="px-3 py-2">{process.startTime}</td>
                       <td className="px-3 py-2">{process.completionTime}</td>
                       <td className="px-3 py-2 font-bold text-[#625bea]">{process.turnaroundTime}</td>
                       <td className="px-3 py-2 font-bold text-[#625bea]">{process.waitingTime}</td>
@@ -357,7 +355,7 @@ export default function App() {
                   ))
                 ) : (
                   <tr>
-                    <td className="h-[76px] text-center text-[10px] text-[#a0a1b0]" colSpan={7}>
+                    <td className="h-[76px] text-center text-[10px] text-[#a0a1b0]" colSpan={6}>
                       No processes to display yet.
                     </td>
                   </tr>
