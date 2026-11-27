@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 
 interface ProcessInput {
@@ -7,77 +7,66 @@ interface ProcessInput {
   burstTime: number;
 }
 
-interface ScheduledProcess extends ProcessInput {
-  startTime: number;
-  completionTime: number;
-  turnaroundTime: number;
-  waitingTime: number;
-}
+const processColors = ['#7068f5', '#16a995', '#f29b55', '#e86d91', '#4b9ee8'];
 
-export default function FCFSScheduler() {
-  const [processes, setProcesses] = useState<ProcessInput[]>([
-    { id: 'P1', arrivalTime: 0, burstTime: 7 },
-    { id: 'P2', arrivalTime: 2, burstTime: 4 },
-    { id: 'P3', arrivalTime: 4, burstTime: 1 },
-    { id: 'P4', arrivalTime: 5, burstTime: 4 },
-  ]);
-
+export default function App() {
+  const [processes, setProcesses] = useState<ProcessInput[]>([]);
   const [newArrival, setNewArrival] = useState('');
   const [newBurst, setNewBurst] = useState('');
 
-  // Generate the next unused process ID.
   const nextId = useMemo(() => {
-    let n = 1;
-    while (processes.some((p) => p.id === `P${n}`)) n++;
-    return `P${n}`;
+    let number = 1;
+    while (processes.some((process) => process.id === `P${number}`)) number++;
+    return `P${number}`;
   }, [processes]);
 
-  // Non-preemptive First Come, First Served scheduling.
   const results = useMemo(() => {
-    const completed: ScheduledProcess[] = [];
     const jobs = processes
       .map((process, index) => ({ process, index }))
-      .sort((a, b) => a.process.arrivalTime - b.process.arrivalTime || a.index - b.index);
+      .sort(
+        (a, b) =>
+          a.process.arrivalTime - b.process.arrivalTime || a.index - b.index,
+      );
     let currentTime = 0;
 
-    for(let i = 0; i < jobs.length; i++) {
-      const { process } = jobs[i];
+    return jobs.map(({ process }) => {
       const startTime = Math.max(currentTime, process.arrivalTime);
       const completionTime = startTime + process.burstTime;
       const turnaroundTime = completionTime - process.arrivalTime;
       const waitingTime = turnaroundTime - process.burstTime;
+      currentTime = completionTime;
 
-      completed.push({
+      return {
         ...process,
         startTime,
         completionTime,
         turnaroundTime,
         waitingTime,
-      });
-
-      currentTime = completionTime;
-    }
-
-    return completed;
+      };
+    });
   }, [processes]);
 
-  const avgTAT = results.length
-    ? (
-        results.reduce((sum, p) => sum + p.turnaroundTime, 0) /
-        results.length
-      ).toFixed(2)
-    : '0.00';
+  const average = (key: 'turnaroundTime' | 'waitingTime') =>
+    results.length
+      ? (
+          results.reduce((total, process) => total + process[key], 0) /
+          results.length
+        ).toFixed(2)
+      : '0.00';
 
-  const avgWT = results.length
-    ? (
-        results.reduce((sum, p) => sum + p.waitingTime, 0) /
-        results.length
-      ).toFixed(2)
-    : '0.00';
+  const averageTAT = average('turnaroundTime');
+  const averageWT = average('waitingTime');
+  const busyTime = results.reduce(
+    (total, process) => total + process.burstTime,
+    0,
+  );
+  const finishTime = results.at(-1)?.completionTime ?? 0;
+  const cpuUtilization = finishTime
+    ? Math.round((busyTime / finishTime) * 100)
+    : 0;
 
-  const handleAddProcess = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
+  const handleAddProcess = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     const arrival = Number(newArrival);
     const burst = Number(newBurst);
 
@@ -85,24 +74,21 @@ export default function FCFSScheduler() {
       newArrival.trim() === '' ||
       newBurst.trim() === '' ||
       !Number.isInteger(arrival) ||
-      !Number.isInteger(burst) || arrival < 0 || burst <= 0
+      !Number.isInteger(burst) ||
+      arrival < 0 ||
+      burst <= 0
     ) {
       return;
     }
 
-    setProcesses((prev) => [
-      ...prev,
-      {
-        id: (() => {
-          let n = 1;
-          while (prev.some((p) => p.id === `P${n}`)) n++;
-          return `P${n}`;
-        })(),
-        arrivalTime: arrival,
-        burstTime: burst,
-      },
-    ]);
-
+    setProcesses((previous) => {
+      let number = 1;
+      while (previous.some((process) => process.id === `P${number}`)) number++;
+      return [
+        ...previous,
+        { id: `P${number}`, arrivalTime: arrival, burstTime: burst },
+      ];
+    });
     setNewArrival('');
     setNewBurst('');
   };
@@ -113,302 +99,301 @@ export default function FCFSScheduler() {
     setNewBurst('');
   };
 
-  const colors = [
-    'bg-blue-600',
-    'bg-indigo-600',
-    'bg-violet-600',
-    'bg-teal-600',
-    'bg-cyan-700',
-  ];
-
-  const scale = 45;
-
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-8 font-sans text-gray-900 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-6xl space-y-6">
+    <main className="min-h-screen bg-[#f5f6fb] px-3 pb-10 text-[#20233a] sm:px-4 md:px-7">
+      <div className="mx-auto max-w-6xl">
+        <section className="relative my-4 flex min-h-[205px] items-center justify-between overflow-hidden rounded-[20px] bg-gradient-to-br from-[#24243f] via-[#302d58] to-[#413b76] px-[22px] py-[27px] text-white shadow-[0_14px_30px_rgba(42,40,78,0.12)] sm:my-6 sm:min-h-[240px] sm:px-[46px] sm:py-[34px]">
+          <div className="relative z-10">
+            <p className="mb-2.5 text-[9px] font-extrabold tracking-[1.55px] text-[#aaa7df]">
+              FCFS | OPERATING SYSTEM SCHEDULING ALGORITHM
+            </p>
+            <h1 className="m-0 text-[32px] font-bold leading-[1.12] tracking-[-1.9px] sm:text-[clamp(30px,4vw,43px)]">
+              First in line.
+              <br />
+              <span className="text-[#aaa5ff]">First to execute.</span>
+            </h1>
+          </div>
+          <div className="pointer-events-none absolute -right-[92px] -bottom-[45px] h-[175px] w-[220px] scale-[0.88] opacity-40 sm:relative sm:right-auto sm:bottom-auto sm:mr-[35px] sm:block sm:scale-100 sm:opacity-100">
+            <div className="absolute inset-[14px_19px] rotate-[-24deg] rounded-[50%] border border-[rgba(185,179,255,0.24)]" />
+            <div className="absolute inset-[26px_4px] rotate-[38deg] rounded-[50%] border border-[rgba(185,179,255,0.14)]" />
+            <div className="absolute top-[61px] left-[75px] grid h-[50px] w-[70px] place-items-center rounded-[15px] border border-white/20 bg-white/10 text-xs font-extrabold tracking-[1px] text-[#e4e1ff] shadow-[0_8px_26px_rgba(13,12,42,0.2)] backdrop-blur">
+              FCFS
+            </div>
+            <span className="absolute top-[15px] left-[50px] grid size-[34px] place-items-center rounded-[11px] border-[3px] border-[#35325c] bg-[#837afd] text-[9px] font-extrabold">
+              P1
+            </span>
+            <span className="absolute top-[106px] right-[19px] grid size-[34px] place-items-center rounded-[11px] border-[3px] border-[#35325c] bg-[#20b89f] text-[9px] font-extrabold">
+              P2
+            </span>
+            <span className="absolute bottom-px left-[47px] grid size-[34px] place-items-center rounded-[11px] border-[3px] border-[#35325c] bg-[#f09a5a] text-[9px] font-extrabold">
+              P3
+            </span>
+          </div>
+        </section>
 
-        {/* Header */}
-        <header className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-          <h1 className="text-2xl  font-bold  tracking-tight sm:text-3xl">
-            First Come, First Served (FCFS) Visualizer
-          </h1>
-          <p className="mt-2 text-sm text-gray-500">
-            Interactive CPU scheduling simulator using
-            non-preemptive FCFS.
-          </p>
-        </header>
+        <section
+          className="mb-5 grid grid-cols-1 gap-2.5 sm:grid-cols-3 sm:gap-[15px]"
+          aria-label="Scheduling metrics"
+        >
+          <article className="min-h-[105px] rounded-[15px] border border-[#e5e2ff] bg-gradient-to-br from-white to-[#f8f7ff] p-[14px_17px] shadow-[0_5px_18px_rgba(43,45,80,0.035)] sm:min-h-[130px] sm:p-[19px_21px_16px]">
+            <div className="flex items-center justify-between text-[11px] font-semibold text-[#818398]">
+              <span>Average turnaround</span>
+            </div>
+            <div className="mt-[7px] text-[26px] font-bold leading-[1.1] tracking-[-1px] text-[#292a45] sm:text-[29px]">
+              {averageTAT}<small className="text-[11px] font-medium tracking-normal text-[#9798aa]"> units</small>
+            </div>
+            <p className="mt-[5px] text-[10px] text-[#a0a1b0]">Completion time minus arrival time</p>
+          </article>
+          <article className="min-h-[105px] rounded-[15px] border border-[#e9eaf2] bg-white p-[14px_17px] shadow-[0_5px_18px_rgba(43,45,80,0.035)] sm:min-h-[130px] sm:p-[19px_21px_16px]">
+            <div className="flex items-center justify-between text-[11px] font-semibold text-[#818398]">
+              <span>Average waiting</span>
+            </div>
+            <div className="mt-[7px] text-[26px] font-bold leading-[1.1] tracking-[-1px] text-[#292a45] sm:text-[29px]">
+              {averageWT}<small className="text-[11px] font-medium tracking-normal text-[#9798aa]"> units</small>
+            </div>
+            <p className="mt-[5px] text-[10px] text-[#a0a1b0]">Time spent waiting in the queue</p>
+          </article>
+          <article className="min-h-[105px] rounded-[15px] border border-[#e9eaf2] bg-white p-[14px_17px] shadow-[0_5px_18px_rgba(43,45,80,0.035)] sm:min-h-[130px] sm:p-[19px_21px_16px]">
+            <div className="flex items-center justify-between text-[11px] font-semibold text-[#818398]">
+              <span>CPU utilization</span>
+            </div>
+            <div className="mt-[7px] text-[26px] font-bold leading-[1.1] tracking-[-1px] text-[#292a45] sm:text-[29px]">
+              {cpuUtilization}<small className="text-[11px] font-medium tracking-normal text-[#9798aa]">%</small>
+            </div>
+            <p className="mt-[5px] text-[10px] text-[#a0a1b0]">
+              {processes.length} {processes.length === 1 ? 'process' : 'processes'} scheduled
+            </p>
+          </article>
+        </section>
 
-        {/* Controls and metrics */}
-        <section className="grid grid-cols-1 gap-6 md:grid-cols-3">
-
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm md:col-span-2">
-            <h2 className="mb-4 text-lg font-semibold">Add System Process</h2>
-
-            <form
-              onSubmit={handleAddProcess}
-              className="grid grid-cols-1 items-end gap-4 sm:grid-cols-4"
-            >
+        <section className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-[1.06fr_0.94fr]">
+          <article className="rounded-[15px] border border-[#e9eaf2] bg-white p-[18px_16px] shadow-[0_5px_18px_rgba(43,45,80,0.035)] sm:p-[21px_23px]">
+            <div className="mb-5 flex items-start justify-between">
               <div>
-                <label htmlFor="process-id" className="mb-1 block text-xs font-medium uppercase text-gray-500">
-                  Process ID
-                </label>
-                <input
-                  id="process-id"
-                  value={nextId}
-                  readOnly
-                  className="w-full rounded-lg border bg-gray-100 px-3 py-2 text-center font-semibold"
-                />
+                <p className="mb-1.5 text-[8px] font-extrabold tracking-[1.2px] text-[#9293ad]">BUILD YOUR QUEUE</p>
+                <h2 className="m-0 text-[17px] font-bold tracking-[-0.45px] text-[#292a45]">Add a process</h2>
               </div>
-
-              <div>
-                <label htmlFor="arrival-time" className="mb-1 block text-xs font-medium uppercase text-gray-500">
-                  Arrival Time
-                </label>
-                <input
-                  id="arrival-time"
-                  type="number"
-                  min="0"
-                  step="1"
-                  required
-                  value={newArrival}
-                  onChange={(e) => setNewArrival(e.target.value)}
-                  placeholder="e.g. 0"
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
-                />
+              <span className="grid size-[27px] place-items-center rounded-lg bg-[#f1f0ff] text-[9px] font-extrabold text-[#7169f4]">01</span>
+            </div>
+            <form onSubmit={handleAddProcess}>
+              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-[0.7fr_1fr_1fr]">
+                <div className="col-span-2 sm:col-span-1">
+                  <label className="mb-[7px] block text-[10px] font-bold text-[#77798e]" htmlFor="process-id">Process ID</label>
+                  <input id="process-id" value={nextId} readOnly className="h-[39px] w-full rounded-lg border border-[#e7e8ef] bg-[#f2f1ff] px-[11px] text-center text-xs font-bold text-[#7068f5] outline-none" />
+                </div>
+                <div>
+                  <label className="mb-[7px] block text-[10px] font-bold text-[#77798e]" htmlFor="arrival-time">Arrival time</label>
+                  <input
+                    id="arrival-time"
+                    type="number"
+                    min="0"
+                    step="1"
+                    required
+                    value={newArrival}
+                    onChange={(event) => setNewArrival(event.target.value)}
+                    placeholder="e.g. 0"
+                    className="h-[39px] w-full rounded-lg border border-[#e7e8ef] bg-[#fbfbfd] px-[11px] text-xs text-[#30314a] outline-none transition focus:border-[#8c85ff] focus:ring-[3px] focus:ring-[#7068f51c]"
+                  />
+                </div>
+                <div>
+                  <label className="mb-[7px] block text-[10px] font-bold text-[#77798e]" htmlFor="burst-time">Burst time</label>
+                  <input
+                    id="burst-time"
+                    type="number"
+                    min="1"
+                    step="1"
+                    required
+                    value={newBurst}
+                    onChange={(event) => setNewBurst(event.target.value)}
+                    placeholder="e.g. 5"
+                    className="h-[39px] w-full rounded-lg border border-[#e7e8ef] bg-[#fbfbfd] px-[11px] text-xs text-[#30314a] outline-none transition focus:border-[#8c85ff] focus:ring-[3px] focus:ring-[#7068f51c]"
+                  />
+                </div>
               </div>
-
-              <div>
-                <label htmlFor="burst-time" className="mb-1 block text-xs font-medium uppercase text-gray-500">
-                  Burst Time
-                </label>
-                <input
-                  id="burst-time"
-                  type="number"
-                  min="1"
-                  step="1"
-                  required
-                  value={newBurst}
-                  onChange={(e) => setNewBurst(e.target.value)}
-                  placeholder="e.g. 5"
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div className="flex gap-2">
-                <button
-                  type="submit"
-                  className="flex-1 cursor-pointer rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-                >
-                  Insert
+              <div className="mt-[15px] flex gap-[9px]">
+                <button className="h-[38px] rounded-lg bg-[#7068f5] px-4 text-[11px] font-bold text-white shadow-[0_5px_12px_rgba(112,104,245,0.2)] transition hover:-translate-y-px hover:bg-[#5e56e5]" type="submit">
+                  <span className="mr-1 text-base">+</span> Add to queue
                 </button>
-
-                <button
-                  type="button"
-                  onClick={handleClear}
-                  className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-100 cursor-pointer"
-                >
-                  Clear
+                <button className="h-[38px] rounded-lg bg-[#f7f7fa] px-3 text-[11px] font-bold text-[#7f8091] transition hover:-translate-y-px hover:bg-[#f0eff5]" type="button" onClick={handleClear}>
+                  Clear all
                 </button>
               </div>
             </form>
-          </div>
-
-          {/* Metrics */}
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-5 text-lg font-semibold">
-              Performance Metrics
-            </h2>
-
-            <div className="space-y-5">
-              <div className="flex items-center justify-between border-b pb-4">
-                <span className="text-sm text-gray-500">
-                  Avg Turnaround Time
-                </span>
-                <span className="text-xl font-bold text-blue-600">
-                  {avgTAT}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-500">
-                  Avg Waiting Time
-                </span>
-                <span className="text-xl font-bold text-indigo-600">
-                  {avgWT}
-                </span>
-              </div>
-            </div>
-
-            <p className="mt-4 text-xs text-gray-400">
-              Time units match your input values.
+            <p className="mt-[15px] flex items-center gap-[7px] text-[9px] text-[#a0a1b0]">
+              <span className="grid size-[14px] place-items-center rounded-full border border-[#c4c5d0]">i</span>
+              Arrival must be 0 or greater; burst time must be at least 1.
             </p>
-          </div>
-        </section>
+          </article>
 
-        {/* Gantt chart */}
-        <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold">
-            Gantt Chart Timeline
-          </h2>
-
-          <div className="overflow-x-auto rounded-lg border border-gray-200 bg-gray-50 p-4">
+          <article className="rounded-[15px] border border-[#e9eaf2] bg-white p-[18px_16px] shadow-[0_5px_18px_rgba(43,45,80,0.035)] sm:p-[21px_23px]">
+            <div className="mb-5 flex items-start justify-between">
+              <div>
+                <p className="mb-1.5 text-[8px] font-extrabold tracking-[1.2px] text-[#9293ad]">CURRENT WORKLOAD</p>
+                <h2 className="m-0 flex items-center gap-[9px] text-[17px] font-bold tracking-[-0.45px] text-[#292a45]">
+                  Process queue
+                  <span className="grid min-w-[21px] h-[21px] place-items-center rounded-[7px] bg-[#f1f0ff] px-[5px] text-[10px] text-[#7068f5]">{processes.length}</span>
+                </h2>
+              </div>
+              <span className="pt-[5px] text-[9px] text-[#a0a1b0]">Arrival order</span>
+            </div>
             {results.length === 0 ? (
-              <p className="py-8 text-center text-sm text-gray-400">
-                Add a process to populate the execution timeline.
-              </p>
+              <div className="grid min-h-[132px] place-content-center justify-items-center text-center text-[#a4a5b3]">
+                <span className="text-2xl text-[#a29cff]">◌</span>
+                <p className="my-[7px] text-[11px] font-bold text-[#686a80]">Your queue is empty</p>
+                <small className="text-[9px]">Add a process to start the simulation.</small>
+              </div>
             ) : (
-              <div className="min-w-max">
-                <div className="flex items-stretch gap-1">
-                  {results.map((p, index) => {
-                    const previousEnd =
-                      index === 0
-                        ? 0
-                        : results[index - 1].completionTime;
-
-                    const idleTime = p.startTime - previousEnd;
-
-                    return (
-                      <React.Fragment key={p.id}>
-                        {idleTime > 0 && (
-                          <div
-                            style={{
-                              width: Math.max(50, idleTime * scale),
-                            }}
-                            className="flex shrink-0 flex-col items-center justify-center rounded border border-dashed border-gray-400 bg-gray-200 px-2 py-4 text-gray-600"
-                          >
-                            <span className="text-xs font-bold">
-                              IDLE
-                            </span>
-                            <span className="mt-1 text-xs">
-                              {previousEnd}–{p.startTime}
-                            </span>
-                          </div>
-                        )}
-
-                        <div
-                          style={{
-                            width: Math.max(65, p.burstTime * scale),
-                          }}
-                          className={`flex shrink-0 flex-col items-center justify-center rounded border border-white/20 px-2 py-4 text-white shadow-sm ${
-                            colors[index % colors.length]
-                          }`}
-                        >
-                          <span className="font-bold">{p.id}</span>
-                          <span className="mt-1 text-xs">
-                            {p.startTime}–{p.completionTime}
-                          </span>
-                        </div>
-                      </React.Fragment>
-                    );
-                  })}
-                </div>
-
-                <div className="mt-3 flex justify-between text-xs font-medium text-gray-500">
-                  <span>Start: 0</span>
-                  <span>
-                    Finish: {results[results.length - 1].completionTime}
-                  </span>
-                </div>
+              <div className="grid gap-[7px]">
+                {results.map((process, index) => (
+                  <div className="flex min-h-12 items-center gap-2.5 rounded-[9px] border border-[#f0f0f5] px-[9px] py-1.5 transition hover:border-[#e6e4ff] hover:bg-[#fbfaff]" key={process.id}>
+                    <span
+                      className="grid size-[30px] shrink-0 place-items-center rounded-[9px] text-[9px] font-extrabold text-white"
+                      style={{ backgroundColor: processColors[index % processColors.length] }}
+                    >
+                      {process.id}
+                    </span>
+                    <div className="grid flex-1 gap-[3px]">
+                      <strong className="text-[10px] text-[#3a3b54]">{process.id}</strong>
+                      <span className="text-[9px] text-[#a0a1b0]">Arrives at {process.arrivalTime}</span>
+                    </div>
+                    <div className="grid min-w-[43px] gap-[3px] text-right">
+                      <strong className="text-[10px] text-[#3a3b54]">{process.burstTime}</strong>
+                      <span className="text-[9px] text-[#a0a1b0]">burst</span>
+                    </div>
+                    <button
+                      className="grid size-[25px] place-items-center rounded-[7px] bg-transparent text-[19px] leading-none text-[#b5b6c2] hover:bg-[#fff0f1] hover:text-[#d76575]"
+                      type="button"
+                      onClick={() =>
+                        setProcesses((previous) =>
+                          previous.filter((item) => item.id !== process.id),
+                        )
+                      }
+                      aria-label={`Remove ${process.id}`}
+                      title={`Remove ${process.id}`}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
-          </div>
+          </article>
         </section>
 
-        {/* Process table */}
-        <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-          <div className="border-b border-gray-200 px-6 py-4">
-            <h2 className="text-lg font-semibold">
-              Process Management Data Grid
-            </h2>
-            <p className="mt-1 text-sm text-gray-500">
-              Processes are displayed in execution order.
-            </p>
+        <section className="mb-4 rounded-[15px] border border-[#e9eaf2] bg-white p-[18px_16px] shadow-[0_5px_18px_rgba(43,45,80,0.035)] sm:p-[21px_23px]">
+          <div className="mb-5 flex items-center justify-between">
+            <div>
+              <p className="mb-1.5 text-[8px] font-extrabold tracking-[1.2px] text-[#9293ad]">EXECUTION VISUALIZATION</p>
+              <h2 className="m-0 text-[17px] font-bold tracking-[-0.45px] text-[#292a45]">CPU timeline</h2>
+            </div>
+            <div className="flex gap-2 text-[9px] text-[#9293a4] sm:gap-[14px]">
+              <span className="inline-flex items-center gap-[5px]"><i className="size-[7px] rounded-[3px] bg-[#7068f5]" />Process</span>
+              <span className="inline-flex items-center gap-[5px]"><i className="size-[7px] rounded-[3px] border border-dashed border-[#a9aab8] bg-[#f1f1f5]" />Idle</span>
+            </div>
           </div>
+          {results.length === 0 ? (
+            <div className="grid min-h-[90px] place-items-center text-[11px] text-[#a0a1b0]">Add a process to see the execution timeline.</div>
+          ) : (
+            <div className="overflow-x-auto px-px pt-1">
+              <div className="flex min-w-max items-stretch gap-[5px]">
+                {results.map((process, index) => {
+                  const previousEnd =
+                    index === 0 ? 0 : results[index - 1].completionTime;
+                  const idleTime = process.startTime - previousEnd;
+                  return (
+                    <React.Fragment key={process.id}>
+                      {idleTime > 0 && (
+                        <div
+                          className="flex min-h-[67px] shrink-0 flex-col items-center justify-center gap-[5px] rounded-[10px] border border-dashed border-[#d1d2dd] bg-[#f7f7fa] text-[#9293a4]"
+                          style={{ width: Math.max(82, idleTime * 54) }}
+                        >
+                          <span className="text-[11px] font-extrabold">IDLE</span>
+                          <small className="text-[9px] opacity-80">{previousEnd}–{process.startTime}</small>
+                        </div>
+                      )}
+                      <div
+                        className="flex min-h-[67px] shrink-0 flex-col items-center justify-center gap-[5px] rounded-[10px] text-white shadow-md"
+                        style={{
+                          width: Math.max(92, process.burstTime * 54),
+                          backgroundColor: processColors[index % processColors.length],
+                        }}
+                      >
+                        <span className="text-[11px] font-extrabold">{process.id}</span>
+                        <small className="text-[9px] opacity-80">{process.startTime}–{process.completionTime}</small>
+                      </div>
+                    </React.Fragment>
+                  );
+                })}
+              </div>
+              <div className="mt-[9px] flex justify-between text-[9px] text-[#a0a1b0]">
+                <span>0</span>
+                <span>{finishTime} time units</span>
+              </div>
+            </div>
+          )}
+        </section>
 
+        <section className="overflow-hidden rounded-[15px] border border-[#e9eaf2] bg-white px-4 pt-[18px] shadow-[0_5px_18px_rgba(43,45,80,0.035)] sm:px-[23px] sm:pt-[21px]">
+          <div className="mb-[15px] flex items-start justify-between">
+            <div>
+              <p className="mb-1.5 text-[8px] font-extrabold tracking-[1.2px] text-[#9293ad]">SCHEDULING BREAKDOWN</p>
+              <h2 className="m-0 text-[17px] font-bold tracking-[-0.45px] text-[#292a45]">Process details</h2>
+            </div>
+            <span className="pt-[5px] text-[9px] text-[#a0a1b0]">All times in units</span>
+          </div>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[850px] text-left text-sm">
-              <thead className="bg-gray-50 text-xs uppercase text-gray-500">
-                <tr>
-                  <th className="px-5 py-3">Process</th>
-                  <th className="px-5 py-3">Arrival</th>
-                  <th className="px-5 py-3">Burst</th>
-                  <th className="px-5 py-3">Start</th>
-                  <th className="px-5 py-3">Completion</th>
-                  <th className="px-5 py-3">Turnaround</th>
-                  <th className="px-5 py-3">Waiting</th>
-                  <th className="px-5 py-3">Action</th>
+            <table className="w-full min-w-[650px] border-collapse text-left">
+              <thead>
+                <tr className="border-y border-[#f0f0f5] bg-[#fbfbfd] text-[8px] font-bold uppercase tracking-[0.55px] text-[#9697a8]">
+                  <th className="px-3 py-2.5">Process</th>
+                  <th className="px-3 py-2.5">Arrival</th>
+                  <th className="px-3 py-2.5">Burst</th>
+                  <th className="px-3 py-2.5">Starts</th>
+                  <th className="px-3 py-2.5">Completes</th>
+                  <th className="px-3 py-2.5">Turnaround</th>
+                  <th className="px-3 py-2.5">Waiting</th>
                 </tr>
               </thead>
-
-              <tbody className="divide-y divide-gray-100">
-                {results.map((p) => (
-                  <tr key={p.id} className="hover:bg-gray-50">
-                    <td className="px-5 py-4 font-semibold">{p.id}</td>
-                    <td className="px-5 py-4">{p.arrivalTime}</td>
-                    <td className="px-5 py-4">{p.burstTime}</td>
-                    <td className="px-5 py-4">{p.startTime}</td>
-                    <td className="px-5 py-4">{p.completionTime}</td>
-                    <td className="px-5 py-4 font-medium text-blue-600">
-                      {p.turnaroundTime}
-                    </td>
-                    <td className="px-5 py-4 font-medium text-indigo-600">
-                      {p.waitingTime}
-                    </td>
-                    <td className="px-5 py-4">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setProcesses((prev) =>
-                            prev.filter((item) => item.id !== p.id)
-                          )
-                        }
-                        aria-label={`Remove ${p.id}`}
-                        className="rounded-md px-3 py-1 text-red-600 hover:bg-red-50"
-                      >
-                        Remove
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-
-                {results.length === 0 && (
+              <tbody>
+                {results.length ? (
+                  results.map((process, index) => (
+                    <tr className="h-[45px] border-b border-[#f1f1f5] text-[10px] text-[#737589]" key={process.id}>
+                      <td className="px-3 py-2 text-[#3d3e56]">
+                        <span
+                          className="mr-2 inline-block size-[7px] rounded-[3px] align-[1px]"
+                          style={{ backgroundColor: processColors[index % processColors.length] }}
+                        />
+                        <strong>{process.id}</strong>
+                      </td>
+                      <td className="px-3 py-2">{process.arrivalTime}</td>
+                      <td className="px-3 py-2">{process.burstTime}</td>
+                      <td className="px-3 py-2">{process.startTime}</td>
+                      <td className="px-3 py-2">{process.completionTime}</td>
+                      <td className="px-3 py-2 font-bold text-[#625bea]">{process.turnaroundTime}</td>
+                      <td className="px-3 py-2 font-bold text-[#625bea]">{process.waitingTime}</td>
+                    </tr>
+                  ))
+                ) : (
                   <tr>
-                    <td
-                      colSpan={8}
-                      className="px-5 py-10 text-center text-gray-400"
-                    >
-                      No processes available. Insert a process to begin.
+                    <td className="h-[76px] text-center text-[10px] text-[#a0a1b0]" colSpan={7}>
+                      No processes to display yet.
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
+          <div className="flex flex-wrap gap-x-[18px] gap-y-2 py-[13px] text-[9px] text-[#9697a8]">
+            <span><strong className="text-[#6d6e83]">CT</strong> = Start + Burst</span>
+            <span><strong className="text-[#6d6e83]">TAT</strong> = CT − Arrival</span>
+            <span><strong className="text-[#6d6e83]">WT</strong> = TAT − Burst</span>
+          </div>
         </section>
 
-        {/* Formula reference */}
-        <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-3 text-lg font-semibold">
-            Scheduling Formulas
-          </h2>
-          <ul className="space-y-2 text-sm text-gray-600">
-            <li>
-              <strong>Completion Time (CT)</strong> = Start Time + Burst Time
-            </li>
-            <li>
-              <strong>Turnaround Time (TAT)</strong> = CT − Arrival Time
-            </li>
-            <li>
-              <strong>Waiting Time (WT)</strong> = TAT − Burst Time
-            </li>
-            <li>
-              <strong>Average TAT</strong> = Total TAT ÷ Number of Processes
-            </li>
-            <li>
-              <strong>Average WT</strong> = Total WT ÷ Number of Processes
-            </li>
-          </ul>
-        </section>
+        <footer className="flex justify-between gap-2 px-1 pt-[18px] text-[8px] text-[#a2a3b1] sm:text-[9px]">
+          <span> FCFS visualizer</span>
+          <span>Non-preemptive scheduling</span>
+        </footer>
       </div>
     </main>
   );
