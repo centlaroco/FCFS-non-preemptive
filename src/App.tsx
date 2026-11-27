@@ -125,7 +125,7 @@ export default function App() {
         </section>
 
         <section
-          className="mb-5 grid grid-cols-1 gap-2.5 sm:grid-cols-3 sm:gap-[15px]"
+          className="mb-5 grid grid-cols-2 gap-2.5 sm:grid-cols-2 sm:gap-[15px]"
           aria-label="Scheduling metrics"
         >
           <article className="min-h-[105px] rounded-[15px] border border-[#e5e2ff] bg-gradient-to-br from-white to-[#f8f7ff] p-[14px_17px] shadow-[0_5px_18px_rgba(43,45,80,0.035)] sm:min-h-[130px] sm:p-[19px_21px_16px]">
