@@ -153,17 +153,6 @@ export default function App() {
             </div>
             <p className="mt-[5px] text-[10px] text-[#a0a1b0]">Time spent waiting in the queue</p>
           </article>
-          <article className="min-h-[105px] rounded-[15px] border border-[#e9eaf2] bg-white p-[14px_17px] shadow-[0_5px_18px_rgba(43,45,80,0.035)] sm:min-h-[130px] sm:p-[19px_21px_16px]">
-            <div className="flex items-center justify-between text-[11px] font-semibold text-[#818398]">
-              <span>CPU utilization</span>
-            </div>
-            <div className="mt-[7px] text-[26px] font-bold leading-[1.1] tracking-[-1px] text-[#292a45] sm:text-[29px]">
-              {cpuUtilization}<small className="text-[11px] font-medium tracking-normal text-[#9798aa]">%</small>
-            </div>
-            <p className="mt-[5px] text-[10px] text-[#a0a1b0]">
-              {processes.length} {processes.length === 1 ? 'process' : 'processes'} scheduled
-            </p>
-          </article>
         </section>
 
         <section className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-[1.06fr_0.94fr]">
