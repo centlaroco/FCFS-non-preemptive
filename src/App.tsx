@@ -364,7 +364,7 @@ export default function App() {
             </table>
           </div>
           <div className="flex flex-wrap gap-x-[18px] gap-y-2 py-[13px] text-[9px] text-[#9697a8]">
-            <span><strong className="text-[#6d6e83]">CT</strong> = Start + Burst</span>
+            <span><strong className="text-[#6d6e83]">CT</strong> = Arrival + Burst</span>
             <span><strong className="text-[#6d6e83]">TAT</strong> = CT − Arrival</span>
             <span><strong className="text-[#6d6e83]">WT</strong> = TAT − Burst</span>
           </div>
