@@ -56,14 +56,7 @@ export default function App() {
 
   const averageTAT = average('turnaroundTime');
   const averageWT = average('waitingTime');
-  const busyTime = results.reduce(
-    (total, process) => total + process.burstTime,
-    0,
-  );
   const finishTime = results.at(-1)?.completionTime ?? 0;
-  const cpuUtilization = finishTime
-    ? Math.round((busyTime / finishTime) * 100)
-    : 0;
 
   const handleAddProcess = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
