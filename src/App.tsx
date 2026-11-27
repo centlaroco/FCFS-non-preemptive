@@ -106,7 +106,7 @@ export default function App() {
               <span className="text-[#aaa5ff]">First to execute.</span>
             </h1>
           </div>
-          <div className="pointer-events-none absolute -right-[92px] -bottom-[45px] h-[175px] w-[220px] scale-[0.88] opacity-40 sm:relative sm:right-auto sm:bottom-auto sm:mr-[35px] sm:block sm:scale-100 sm:opacity-100">
+          <div className="pointer-events-none absolute -right-[92px] -bottom-[45px] hidden h-[175px] w-[220px] scale-[0.88] opacity-40 lg:relative lg:right-auto lg:bottom-auto lg:mr-[35px] lg:block lg:scale-100 lg:opacity-100">
             <div className="absolute inset-[14px_19px] rotate-[-24deg] rounded-[50%] border border-[rgba(185,179,255,0.24)]" />
             <div className="absolute inset-[26px_4px] rotate-[38deg] rounded-[50%] border border-[rgba(185,179,255,0.14)]" />
             <div className="absolute top-[61px] left-[75px] grid h-[50px] w-[70px] place-items-center rounded-[15px] border border-white/20 bg-white/10 text-xs font-extrabold tracking-[1px] text-[#e4e1ff] shadow-[0_8px_26px_rgba(13,12,42,0.2)] backdrop-blur">
